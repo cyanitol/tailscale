@@ -93,10 +93,13 @@ func tryExecInDir(ctx context.Context, dir string) error {
 		windir := os.Getenv("windir")
 		return run(filepath.Join(windir, "system32", "doskey.exe"))
 	}
-	if err := run("/bin/true"); !errors.Is(err, exec.ErrNotFound) { // including nil
+	// /usr/bin/true is more common than /bin/true today and increasingly so.
+	// exec returns different not exist errors depending on whether it performs
+	// a $PATH search, both are covered here.
+	if err := run("/usr/bin/true"); !os.IsNotExist(err) && !errors.Is(err, exec.ErrNotFound) { // including nil
 		return err
 	}
-	return run("/usr/bin/true")
+	return run("/bin/true")
 }
 
 // newIncubatorCommand returns a new exec.Cmd configured with
